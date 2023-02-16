@@ -1,4 +1,4 @@
-package src.main;
+package src.main.services;
 
 public interface CacheServiceInterface {
 
@@ -8,7 +8,7 @@ public interface CacheServiceInterface {
 
     void remove(String key);
 
-    void invalidate();
+    void invalidateAll();
 
 
 }

@@ -1,36 +1,33 @@
 package src.main;
 
+import src.main.data.Priority;
+import src.main.services.impl.CacheServiceImpl;
+import src.main.services.impl.InvalidationServiceImpl;
+
 class Main {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
 
         String object1 = "object1";
         String object2 = "object2";
         String object3 = "object3";
 
         CacheServiceImpl cacheService = new CacheServiceImpl();
+        InvalidationServiceImpl priorityService = new InvalidationServiceImpl();
 
-        System.out.println("Put 3 objects into cache: " + object1 + ", " + object2 + ", and " + object3);
-        cacheService.put("1", object1);
-        cacheService.put("2", object2);
-        cacheService.put("3", object3);
+        CachingManager cachingManager = new CachingManager(cacheService, priorityService);
 
-        System.out.println("Get object by key 1: " + cacheService.get("1") + "\n");
+        cachingManager.putAndRegister("1", object1, null);
+        cachingManager.putAndRegister("2", object2, Priority.MEDIUM);
+        cachingManager.putAndRegister("3", object3, Priority.LOW);
 
-        System.out.println("Delete object by key 2.");
-        cacheService.remove("2");
-        System.out.println("Check if object by key 2 exists: " + cacheService.get("2") + "\n");
+        cachingManager.unregister("1");
 
-        System.out.println("Clear all cache.");
-        cacheService.invalidate();
+        cachingManager.get("2");
 
-        System.out.println("Check if any object remains in cache: " + cacheService.get("1") + cacheService.get("2") + cacheService.get("3"));
+        Thread.sleep(20000);
 
-        System.out.println("\n------------");
-
-        System.out.println("Check if we can put null object or null key:");
-        cacheService.put("4", null);
-
+        cachingManager.invalidateAll();
     }
 }
 

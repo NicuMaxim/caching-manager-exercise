@@ -1,8 +1,8 @@
-package src.main.test;
+package src.main.tests;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import src.main.CacheServiceImpl;
+import src.main.services.impl.CacheServiceImpl;
 
 public class CacheServiceImplTest {
 
@@ -39,7 +39,7 @@ public class CacheServiceImplTest {
         cacheService.put("2", "Object_2");
         cacheService.put("3", "Object_3");
 
-        cacheService.invalidate();
+        cacheService.invalidateAll();
 
         Assertions.assertNull(cacheService.get("1"));
         Assertions.assertNull(cacheService.get("2"));
