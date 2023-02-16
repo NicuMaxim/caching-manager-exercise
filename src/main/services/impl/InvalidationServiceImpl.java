@@ -19,38 +19,52 @@ public class InvalidationServiceImpl implements InvalidationServiceInterface {
 
     @Override
     public void register(String key, Priority priority) {
+        synchronized (cache) {
 
-        ScheduledFuture<?> expiry = expiries.remove(key);
-        if (expiry != null) {
-            expiry.cancel(false);
+            ScheduledFuture<?> expiry = expiries.remove(key);
+            if (expiry != null) {
+                expiry.cancel(false);
+            }
+
+            expiry = executor.schedule(() -> {
+                expiries.remove(key);
+                cache.remove(key);
+                System.out.println("Object: " + key + " was automatically removed by schedule after " + priority.expirationTime + " milliseconds.");
+            }, priority.expirationTime, TimeUnit.MILLISECONDS);
+            expiries.put(key, expiry);
         }
-
-        expiry = executor.schedule(() -> {
-            expiries.remove(key);
-            cache.remove(key);
-            System.out.println("Object: " + key + " was automatically removed by schedule after " + priority.expirationTime + " milliseconds.");
-        }, priority.expirationTime, TimeUnit.MILLISECONDS);
-        expiries.put(key, expiry);
     }
 
     @Override
     public void unregister(String key) {
-        ScheduledFuture<?> expiry = expiries.remove(key);
-        if (expiry != null) {
-            expiry.cancel(false);
+        synchronized (cache) {
+            if (cache.get(key) == null) {
+                System.out.println("Object" + key + " is missing.");
+                return;
+            }
+            ScheduledFuture<?> expiry = expiries.remove(key);
+            if (expiry != null) {
+                expiry.cancel(false);
+            }
+            System.out.println("Object: " + key + " was unregistered.");
         }
-        System.out.println("Object: " + key + " was unregistered.");
     }
 
     @Override
     public boolean check(String key) {
-        ScheduledFuture<?> expiry = expiries.get(key);
-        if (expiry == null) {
-            System.out.println("Object: " + key + " was invalidated or unregistered.");
-            return false;
-        } else {
-            System.out.println("Object: " + key + " is still valid.");
-            return true;
+        synchronized (cache) {
+            if (cache.get(key) == null) {
+                System.out.println("Object" + key + " is missing.");
+                return false;
+            }
+            ScheduledFuture<?> expiry = expiries.get(key);
+            if (expiry == null) {
+                System.out.println("Object: " + key + " was unregistered.");
+                return false;
+            } else {
+                System.out.println("Object: " + key + " is still valid.");
+                return true;
+            }
         }
     }
 

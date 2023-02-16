@@ -7,37 +7,49 @@ import java.util.Map;
 
 public class CacheServiceImpl implements CacheServiceInterface {
 
-    Map<String, Object> cacheInstance = Cache.getCacheInstance();
+    Map<String, Object> cache = Cache.getCacheInstance();
 
     @Override
     public void put(String key, Object o) {
+        synchronized (cache) {
+            if (key == null || key.isEmpty() || o == null) {
+                System.out.println("Null keys and values are not allowed");
+                return;
+            }
+            if (cache.size() == 100) {
+                System.out.println("Cache has already 100 elements and can't fit any more.");
+                return;
+            }
+            if (cache.get(key) != null) {
+                System.out.println("An unique key is required.");
+                return;
+            }
 
-        if (key == null || key.isEmpty() || o == null) {
-            System.out.println("Null keys and values are not allowed");
-            return;
+            cache.put(key, o);
+            System.out.println("New Object added with key: " + key);
         }
-        if (cacheInstance.size() == 100) {
-            System.out.println("Cache has already 100 elements and can't fit any more.");
-            return;
-        }
-        cacheInstance.put(key, o);
-        System.out.println("New Object put with key: " + key);
     }
 
     @Override
     public Object get(String key) {
-        return cacheInstance.get(key);
+        synchronized (cache) {
+            return cache.get(key);
+        }
     }
 
     @Override
     public void remove(String key) {
-        cacheInstance.remove(key);
-        System.out.println("Object by key " + key + " was removed.");
+        synchronized (cache) {
+            cache.remove(key);
+            System.out.println("Object: " + key + " was removed.");
+        }
     }
 
     @Override
     public void invalidateAll() {
-        cacheInstance.clear();
-        System.out.println("All cache was invalidated.");
+        synchronized (cache) {
+            cache.clear();
+            System.out.println("All cache was evicted.");
+        }
     }
 }
